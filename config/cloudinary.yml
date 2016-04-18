@@ -1,0 +1,8 @@
+production:
+  cloud_name: "htrewehqs"
+  api_key: "362733823923577"
+  api_secret: "cHEfQTUWtgwBXY8VZdP5PebrENg"
+development:
+  cloud_name: "htrewehqs"
+  api_key: "362733823923577"
+  api_secret: "cHEfQTUWtgwBXY8VZdP5PebrENg"

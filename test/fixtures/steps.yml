@@ -1,0 +1,23 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  sender_id: MyString
+  start_lat: 1.5
+  start_lng: 1.5
+  end_lat: 1.5
+  end_lng: 1.5
+  distance_text: MyString
+  duration_text: MyString
+  html_instructions: MyString
+  travel_mode: MyString
+
+two:
+  sender_id: MyString
+  start_lat: 1.5
+  start_lng: 1.5
+  end_lat: 1.5
+  end_lng: 1.5
+  distance_text: MyString
+  duration_text: MyString
+  html_instructions: MyString
+  travel_mode: MyString

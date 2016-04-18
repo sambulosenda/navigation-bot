@@ -1,0 +1,11 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  facebook_id: MyString
+  navigation_status: 1
+  current_step_id: MyString
+
+two:
+  facebook_id: MyString
+  navigation_status: 1
+  current_step_id: MyString
