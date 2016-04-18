@@ -18,7 +18,7 @@ class MessageHandler
 
 
   # post_message
-  def post_message
+  def post_message(received_message)
     return nil unless @sender
 
     facebook_client = FacebookClient.new
@@ -30,9 +30,7 @@ class MessageHandler
       @sender.save if @sender.valid?
       json
     when 1
-      json = google_client.get_geocode()
-      result = google_client.parse_get_geocode(json)
-      return post_error unless result
+      set_geocode(received_message)
 
       start_lat = result['geometry']['location']['lat'].to_f
       start_lng = result['geometry']['location']['lng'].to_f
@@ -75,21 +73,21 @@ class MessageHandler
       if message == 'Yes'
         @sender.navigation_status += 1
         @sender.save if @sender.valid?
-        post_message
+        post_message(message)
       elsif message == 'No'
         @sender = Sender.recreate(@sender.facebook_id)
-        post_message
+        post_message(message)
       elsif message == 'Stop navigation'
         @sender = Sender.recreate(@sender.facebook_id)
-        post_message
+        post_message(message)
       end
     when 2
       if message == 'I got there'
         set_current_step
-        post_message
+        post_message(message)
       elsif message == 'Stop navigation'
         @sender = Sender.recreate(@sender.facebook_id)
-        post_message
+        post_message(message)
       end
     when 3
       nil
@@ -129,6 +127,13 @@ class MessageHandler
 
     @sender.save if @sender.valid?
     @sender.steps
+  end
+
+  # set_geocode
+  def set_geocode(address)
+    google_client = GoogleClient.new(@server_key)
+    json = google_client.get_geocode(address)
+    result = google_client.parse_get_geocode(json)
   end
 
   # set_streetview
