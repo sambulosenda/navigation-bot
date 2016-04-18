@@ -13,7 +13,7 @@ class WebhookController < ApplicationController
     challenge = params['hub.challenge']
     render text: 'no challenge' and return unless challenge
 
-    render challenge
+    render text: challenge
   end
 
 
