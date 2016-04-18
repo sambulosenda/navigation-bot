@@ -146,15 +146,17 @@ class MessageHandler
 
       name = "#{lat}_#{lng}_#{degree}"
 
-      # upload image
-      data_uri = "data:image/jpeg;base64,#{Base64.encode64(image_file)}"
-      response = Cloudinary::Uploader.upload(data_uri)
-      uri = response['secure_url']
-      next unless uri
+      # uploading image file
+      temp_img_file = Tempfile.new("#{name}.jpeg")
+      temp_img_file.binmode
+      temp_img_file << image_file
+      temp_img_file.rewind
+      img_params = {:filename => "#{name}.jpeg", :type => 'image/jpeg', :tempfile => temp_img_file}
 
       # create image
       image = Image.new
-      image.remote_uri_url = uri
+      image.uri = ActionDispatch::Http::UploadedFile.new(img_params)
+      #image.remote_uri_url = uri
       image.name = name
       image.width = width
       image.height = height
