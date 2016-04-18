@@ -19,11 +19,12 @@ class MessageHandler
 
   # post_message
   def post_message(received_message)
-    return nil unless @sender
+    json = {}
+    return json unless @sender
 
     case @sender.navigation_status
     when 0
-      post_text('Where is your current location?')
+      json = post_text('Where is your current location?')
       update_navigation_status
       json
     when 1
@@ -42,7 +43,7 @@ class MessageHandler
       subtitle = result['address_components'].first['short_name']
       image_uri = (current_step.images && current_step.images.count > 0) ? current_step.images[0].uri : ''
       buttons = ['Yes', 'No', 'Stop navigation']
-      post_payload(title, subtitle, image_uri, buttons)
+      json = post_payload(title, subtitle, image_uri, buttons)
     when 2
       # get current step for navigation
       current_step = get_current_step
@@ -52,19 +53,24 @@ class MessageHandler
       subtitle = "#{current_step.html_instructions} #{current_step.distance_text} #{current_step.duration_text}" if current_step
       image_uri = (current_step.images && current_step.images.count >= 2) ? current_step.images[1].uri : ''
       buttons = ['I got there', 'Stop navigation']
-      post_payload(title, subtitle, image_uri, buttons)
+      json post_payload(title, subtitle, image_uri, buttons)
     when 3
-      post_text('Congratulations! You got the destination.')
+      json = post_text('Congratulations! You got the destination.')
       @sender.destroy if @sender
+      json
     else
-      nil
+      json
     end
   end
 
   # post text
   def post_text(message)
+    text = "{ 'text' : '#{message}' }"
     facebook_client = FacebookClient.new
-    facebook_client.post_message(@sender.facebook_id, "{ 'text' : '#{message}' }")
+    json = facebook_client.post_message(@sender.facebook_id, text)
+    puts '//////////////'
+    puts text
+    json
   end
 
   # post payload
@@ -76,7 +82,10 @@ class MessageHandler
     end
     message = "{ 'attachment':{ 'type':'template', 'payload':{ 'template_type':'generic', 'elements':[ { 'title':'#{title}', 'image_url':'#{image_uri}', 'subtitle':'#{subtitle}', 'buttons':[ #{buttons_text} ] } ] } } }"
     facebook_client = FacebookClient.new
-    facebook_client.post_message(@sender.facebook_id, message)
+    json = facebook_client.post_message(@sender.facebook_id, message)
+    puts '//////////////'
+    puts message
+    json
   end
 
 
@@ -105,9 +114,9 @@ class MessageHandler
         post_message(message)
       end
     when 3
-      nil
+      {}
     else
-      nil
+      {}
     end
   end
 
