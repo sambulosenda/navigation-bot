@@ -71,7 +71,8 @@ class MessageHandler
   def post_payload(title, subtitle, image_uri, buttons)
     buttons_text = ''
     for i in 0...buttons.count
-      buttons_text += "{ 'type':'postback', 'title':'#{buttons[i]}', 'payload':'#{buttons[i]}' },"
+      buttons_text += "{ 'type':'postback', 'title':'#{buttons[i]}', 'payload':'#{buttons[i]}' }"
+      buttons_text += ', ' unless i == buttons.count-1
     end
     message = "{ 'attachment':{ 'type':'template', 'payload':{ 'template_type':'generic', 'elements':[ { 'title':'#{title}', 'image_url':'#{image_uri}', 'subtitle':'#{subtitle}', 'buttons':[ #{buttons_text} ] } ] } } }"
     facebook_client = FacebookClient.new
