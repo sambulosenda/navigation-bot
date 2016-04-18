@@ -55,15 +55,18 @@ class GoogleClient
   def parse_get_directions_steps(json)
     # no route
     routes = json['routes']
-    return nil unless routes || routes.count
+    return nil unless routes
+    return nil unless routes.count
 
     # legs
     legs = routes.first['legs']
-    return nil unless legs || legs.count
+    return nil unless legs
+    return nil unless legs.count
 
     # steps
     steps = legs.first['steps']
-    return nil unless steps || steps.count
+    return nil unless steps
+    return nil unless steps.count
 
     steps
   end
@@ -89,7 +92,8 @@ class GoogleClient
   # parse_get_geocode
   def parse_get_geocode(json)
     results = json['results']
-    return nil unless results || results.count
+    return nil unless results
+    return nil unless results.count
 
     return results.first
   end
