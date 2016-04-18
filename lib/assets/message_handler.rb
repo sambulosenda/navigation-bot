@@ -21,47 +21,59 @@ class MessageHandler
   def post_message(received_message)
     return nil unless @sender
 
-    facebook_client = FacebookClient.new
-
     case @sender.navigation_status
     when 0
-      json = facebook_client.post_message(@sender.facebook_id, "{ 'text' : 'Where is your current location?' }")
-      @sender.navigation_status = 1
-      @sender.save if @sender.valid?
+      post_text('Where is your current location?')
+      update_navigation_status
       json
     when 1
+      # get geocode from message
       result = set_geocode(received_message)
       return post_error unless result
-
+      # get current step for navigation
       start_lat = result['geometry']['location']['lat'].to_f
       start_lng = result['geometry']['location']['lng'].to_f
       set_directions(start_lat, start_lng)
       set_current_step
-
+      current_step = get_current_step
+      return post_error unless current_step
+      # post bot message
       title = 'Are you here?'
       subtitle = result['address_components'].first['short_name']
-      current_step = Step.find_by_id(@sender.current_step_id)
-      return post_error unless current_step
-      img_uri = (current_step.images && current_step.images.count > 0) ? current_step.images[0].uri : ''
-      message = "{ 'attachment':{ 'type':'template', 'payload':{ 'template_type':'generic', 'elements':[ { 'title':'#{title}', 'image_url':'#{img_uri}', 'subtitle':'#{subtitle}', 'buttons':[ { 'type':'postback', 'title':'Yes', 'payload':'Yes' }, { 'type':'postback', 'title':'No', 'payload':'No' }, { 'type':'postback', 'title':'Stop navigation', 'payload':'Stop navigation' } ] } ] } } }"
-
-      facebook_client.post_message(@sender.facebook_id, message)
+      image_uri = (current_step.images && current_step.images.count > 0) ? current_step.images[0].uri : ''
+      buttons = ['Yes', 'No', 'Stop navigation']
+      post_payload(title, subtitle, image_uri, buttons)
     when 2
-      title = 'Let me know when you get there.'
-      subtitle = ''
-      current_step = Step.find_by_id(@sender.current_step_id)
+      # get current step for navigation
+      current_step = get_current_step
       return post_error unless current_step
+      # post bot message
+      title = 'Let me know when you get there.'
       subtitle = "#{current_step.html_instructions} #{current_step.distance_text} #{current_step.duration_text}" if current_step
-      img_uri = (current_step.images && current_step.images.count >= 2) ? current_step.images[1].uri : ''
-      message = "{ 'attachment':{ 'type':'template', 'payload':{ 'template_type':'generic', 'elements':[ { 'title':'#{title}', 'image_url':'#{img_uri}', 'subtitle':'#{subtitle}', 'buttons':[ { 'type':'postback', 'title':'I got there', 'payload':'I got there' }, { 'type':'postback', 'title':'Stop navigation', 'payload':'Stop navigation' } ] } ] } } }"
-
-      facebook_client.post_message(@sender.facebook_id, message)
+      image_uri = (current_step.images && current_step.images.count >= 2) ? current_step.images[1].uri : ''
+      buttons = ['I got there', 'Stop navigation']
+      post_payload(title, subtitle, image_uri, buttons)
     when 3
+      post_text('Congratulations! You got the destination.')
       @sender.destroy if @sender
-      facebook_client.post_message(@sender.facebook_id, "{ 'text' : 'Congratulations! You got the destination.' }")
     else
       nil
     end
+  end
+
+  # post text
+  def post_text(message)
+    facebook_client = FacebookClient.new
+    facebook_client.post_message(@sender.facebook_id, "{ 'text' : '#{message}' }")
+  end
+
+  # post payload
+  def post_payload(title, subtitle, image_uri, buttons)
+    payloads = ''
+    buttons.each { |button| payloads += "{ 'type':'postback', 'title':'#{button}', 'payload':'#{button}' }," }
+    message = "{ 'attachment':{ 'type':'template', 'payload':{ 'template_type':'generic', 'elements':[ { 'title':'#{title}', 'image_url':'#{img_uri}', 'subtitle':'#{subtitle}', 'buttons':[ #{payloads} ] } ] } } }"
+    facebook_client = FacebookClient.new
+    facebook_client.post_message(@sender.facebook_id, message)
   end
 
 
@@ -72,8 +84,7 @@ class MessageHandler
       post_message(message)
     when 1
       if message == 'Yes'
-        @sender.navigation_status += 1
-        @sender.save if @sender.valid?
+        update_navigation_status
         post_message(message)
       elsif message == 'No'
         @sender = Sender.recreate(@sender.facebook_id)
@@ -97,6 +108,24 @@ class MessageHandler
     end
   end
 
+
+  # update navigation status
+  def update_navigation_status
+    case @sender.navigation_status
+    when 0
+      @sender.navigation_status += 1
+      @sender.save if @sender.valid?
+    when 1
+      @sender.navigation_status += 1
+      @sender.save if @sender.valid?
+    when 2
+      @sender.navigation_status += 1
+      @sender.save if @sender.valid?
+    when 3
+    else
+      nil
+    end
+  end
 
   # set_directions
   def set_directions(start_lat, start_lng)
@@ -140,7 +169,7 @@ class MessageHandler
   # set_streetview
   def set_streetview
     # current step
-    current_step = Step.find_by_id(@sender.current_step_id)
+    current_step = get_current_step
     return unless current_step
     return if current_step.images.count >= 2
 
@@ -167,7 +196,6 @@ class MessageHandler
       # create image
       image = Image.new
       image.uri = ActionDispatch::Http::UploadedFile.new(img_params)
-      #image.remote_uri_url = uri
       image.name = name
       image.width = width
       image.height = height
@@ -199,7 +227,7 @@ class MessageHandler
       if index == nil
         @sender.current_step_id = @sender.steps.last.id
       elsif index >= @sender.steps.count
-        @sender.navigation_status += 1
+        update_navigation_status
       else
         @sender.current_step_id = @sender.steps[index].id
       end
@@ -208,6 +236,13 @@ class MessageHandler
     set_streetview
 
     true
+  end
+
+  # get current step
+  def get_current_step
+    return nil unless @sender
+    return nil unless @sender.current_step_id
+    Step.find_by_id(@sender.current_step_id)
   end
 
 end
