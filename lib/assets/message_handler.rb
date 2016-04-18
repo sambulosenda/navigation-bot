@@ -69,7 +69,7 @@ class MessageHandler
   def handle_postback(message)
     case @sender.navigation_status
     when 0
-      nil
+      post_message(message)
     when 1
       if message == 'Yes'
         @sender.navigation_status += 1
