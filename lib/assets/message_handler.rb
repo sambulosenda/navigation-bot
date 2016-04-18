@@ -71,7 +71,7 @@ class MessageHandler
   def post_payload(title, subtitle, image_uri, buttons)
     payloads = ''
     buttons.each { |button| payloads += "{ 'type':'postback', 'title':'#{button}', 'payload':'#{button}' }," }
-    message = "{ 'attachment':{ 'type':'template', 'payload':{ 'template_type':'generic', 'elements':[ { 'title':'#{title}', 'image_url':'#{img_uri}', 'subtitle':'#{subtitle}', 'buttons':[ #{payloads} ] } ] } } }"
+    message = "{ 'attachment':{ 'type':'template', 'payload':{ 'template_type':'generic', 'elements':[ { 'title':'#{title}', 'image_url':'#{image_uri}', 'subtitle':'#{subtitle}', 'buttons':[ #{payloads} ] } ] } } }"
     facebook_client = FacebookClient.new
     facebook_client.post_message(@sender.facebook_id, message)
   end
