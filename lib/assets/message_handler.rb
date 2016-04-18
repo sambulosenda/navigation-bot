@@ -30,7 +30,8 @@ class MessageHandler
       @sender.save if @sender.valid?
       json
     when 1
-      set_geocode(received_message)
+      result = set_geocode(received_message)
+      return post_error unless result
 
       start_lat = result['geometry']['location']['lat'].to_f
       start_lng = result['geometry']['location']['lng'].to_f
