@@ -1,8 +1,8 @@
 production:
-  cloud_name: "htrewehqs"
-  api_key: "362733823923577"
-  api_secret: "cHEfQTUWtgwBXY8VZdP5PebrENg"
+  cloud_name: "hjxk6op4p"
+  api_key: "726875636796787"
+  api_secret: "872dJALE3jIrHrxgmNwNi_h9CZQ"
 development:
-  cloud_name: "htrewehqs"
-  api_key: "362733823923577"
-  api_secret: "cHEfQTUWtgwBXY8VZdP5PebrENg"
+  cloud_name: "hjxk6op4p"
+  api_key: "726875636796787"
+  api_secret: "872dJALE3jIrHrxgmNwNi_h9CZQ"
