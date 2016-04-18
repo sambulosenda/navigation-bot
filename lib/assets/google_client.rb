@@ -10,7 +10,7 @@ class GoogleClient
   end
 
   # get_streetview
-  def get_streetview(lat, lng, heading_degree, width, height)
+  def get_streetview(lat, lng, degree, width, height)
     uri_string = 'https://maps.googleapis.com/maps/api/streetview'
     connection = Faraday.new(:url => uri_string) do |faraday|
       faraday.request  :url_encoded
@@ -22,8 +22,8 @@ class GoogleClient
       request.params['key'] = @server_key
       request.params['size'] = "#{width}x#{height}"
       request.params['location'] = "#{lat},#{lng}"
-      request.params['fov'] = '90'
-      request.params['heading'] = "#{heading_degree}"
+      request.params['fov'] = "#{degree}"
+      request.params['heading'] = '0'
       request.params['pitch'] = '0'
       request.headers['Content-Type'] = 'application/json'
     end
@@ -67,4 +67,5 @@ class GoogleClient
 
     steps
   end
+
 end

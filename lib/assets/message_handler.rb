@@ -1,6 +1,5 @@
 require './lib/assets/google_client'
 require './lib/assets/facebook_client'
-require './lib/assets/facebook_client'
 
 
 class MessageHandler
@@ -136,7 +135,7 @@ class MessageHandler
     # upload streetview images of start & end coordinates
     google_client = GoogleClient.new(@server_key)
     coordinates = [ {:lat => current_step.start_lat, :lng => current_step.start_lng}, {:lat => current_step.end_lat, :lng => current_step.end_lng} ]
-    width = 320; height = 320; degree = 180
+    width = 320; height = 160; degree = 120
     coordinates.each do |coordinate|
       # get image binary from street view
       lat = coordinate[:lat]
@@ -144,7 +143,7 @@ class MessageHandler
       image_file = google_client.get_streetview(lat, lng, degree, width, height)
       next unless image_file
 
-      name = "#{lat}_#{lng}_#{degree}"
+      name = "#{lat}_#{lng}"
 
       # uploading image file
       temp_img_file = Tempfile.new("#{name}.jpeg")
