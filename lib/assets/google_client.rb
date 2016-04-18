@@ -68,4 +68,30 @@ class GoogleClient
     steps
   end
 
+  # get_geocode
+  def get_geocode(address)
+    uri_string = 'https://maps.googleapis.com/maps/api/geocode/json'
+    connection = Faraday.new(:url => uri_string) do |faraday|
+      faraday.request  :url_encoded
+      faraday.response :logger
+      faraday.adapter  Faraday.default_adapter
+    end
+
+    response = connection.get do |request|
+      request.params['key'] = @server_key
+      request.params['address'] = address
+      request.headers['Content-Type'] = 'application/json'
+    end
+
+   JSON.parse(response.body)
+  end
+
+  # parse_get_geocode
+  def parse_get_geocode(json)
+    results = json['results']
+    return nil unless results || results.count
+
+    return results.first
+  end
+
 end

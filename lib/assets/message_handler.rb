@@ -10,9 +10,10 @@ class MessageHandler
     @sender = Sender.find_by_facebook_id facebook_id
   end
 
-  # handle_error
-  def handle_error
-    'Sorry. I am not sure what you meant.'
+  # post_error
+  def post_error
+    facebook_client = FacebookClient.new
+    json = facebook_client.post_message(@sender.facebook_id, 'Sorry. I am not sure what you meant.')
   end
 
 
@@ -29,15 +30,19 @@ class MessageHandler
       @sender.save if @sender.valid?
       json
     when 1
-      start_lat = 37.7844688
-      start_lng = -122.4079864
+      json = google_client.get_geocode()
+      result = google_client.parse_get_geocode(json)
+      return post_error unless result
+
+      start_lat = result['geometry']['location']['lat'].to_f
+      start_lng = result['geometry']['location']['lng'].to_f
       set_directions(start_lat, start_lng)
       set_current_step
 
       title = 'Are you here?'
-      subtitle = ''
+      subtitle = result['address_components'].first['short_name']
       current_step = Step.find_by_id(@sender.current_step_id)
-      subtitle = "(#{current_step.start_lat}, #{current_step.start_lng})" if current_step
+      return post_error unless current_step
       img_uri = (current_step.images && current_step.images.count > 0) ? current_step.images[0].uri : ''
       message = "{ 'attachment':{ 'type':'template', 'payload':{ 'template_type':'generic', 'elements':[ { 'title':'#{title}', 'image_url':'#{img_uri}', 'subtitle':'#{subtitle}', 'buttons':[ { 'type':'postback', 'title':'Yes', 'payload':'Yes' }, { 'type':'postback', 'title':'No', 'payload':'No' }, { 'type':'postback', 'title':'Stop navigation', 'payload':'Stop navigation' } ] } ] } } }"
 
@@ -46,6 +51,7 @@ class MessageHandler
       title = 'Let me know when you get there.'
       subtitle = ''
       current_step = Step.find_by_id(@sender.current_step_id)
+      return post_error unless current_step
       subtitle = "#{current_step.html_instructions} #{current_step.distance_text} #{current_step.duration_text}" if current_step
       img_uri = (current_step.images && current_step.images.count >= 2) ? current_step.images[1].uri : ''
       message = "{ 'attachment':{ 'type':'template', 'payload':{ 'template_type':'generic', 'elements':[ { 'title':'#{title}', 'image_url':'#{img_uri}', 'subtitle':'#{subtitle}', 'buttons':[ { 'type':'postback', 'title':'I got there', 'payload':'I got there' }, { 'type':'postback', 'title':'Stop navigation', 'payload':'Stop navigation' } ] } ] } } }"
