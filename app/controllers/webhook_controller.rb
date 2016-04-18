@@ -9,9 +9,9 @@ class WebhookController < ApplicationController
 
   def get_facebook
     verify_token = params['hub.verify_token']
-    render 'no verify_token' and return unless verify_token == ENV['FB_VERIFY_TOKEN']
+    render text: 'no verify_token' and return unless verify_token == ENV['FB_VERIFY_TOKEN']
     challenge = params['hub.challenge']
-    render 'no challenge' and return unless challenge
+    render text: 'no challenge' and return unless challenge
 
     render challenge
   end
