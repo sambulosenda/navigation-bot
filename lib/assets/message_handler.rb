@@ -68,9 +68,6 @@ class MessageHandler
     text = "{ 'text' : '#{message}' }"
     facebook_client = FacebookClient.new
     json = facebook_client.post_message(@sender.facebook_id, text)
-    puts '//////////////'
-    puts text
-    json
   end
 
   # post payload
@@ -83,9 +80,6 @@ class MessageHandler
     message = "{ 'attachment':{ 'type':'template', 'payload':{ 'template_type':'generic', 'elements':[ { 'title':'#{title}', 'image_url':'#{image_uri}', 'subtitle':'#{subtitle}', 'buttons':[ #{buttons_text} ] } ] } } }"
     facebook_client = FacebookClient.new
     json = facebook_client.post_message(@sender.facebook_id, message)
-    puts '//////////////'
-    puts message
-    json
   end
 
 

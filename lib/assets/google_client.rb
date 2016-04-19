@@ -98,4 +98,69 @@ class GoogleClient
     return results.first
   end
 
+  # get_place_nearbysearch
+  def get_place_nearbysearch(lat, lng, type)
+    uri_string = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json'
+    connection = Faraday.new(:url => uri_string) do |faraday|
+      faraday.request  :url_encoded
+      faraday.response :logger
+      faraday.adapter  Faraday.default_adapter
+    end
+
+    response = connection.get do |request|
+      request.params['key'] = @server_key
+      request.params['location'] = "#{lat},#{lng}"
+      request.params['type'] = "#{type}"
+      request.params['radius'] = 200
+      request.headers['Content-Type'] = 'application/json'
+    end
+
+   JSON.parse(response.body)
+  end
+
+  # parse_get_place_nearbysearch
+  def parse_get_place_nearbysearch(json)
+    results = json['results']
+    return nil unless results
+    return nil unless results.count > 0
+    photos = results.first['photos']
+    return nil unless photos
+    return nil unless photos.count > 0
+
+    photos.first['photo_reference']
+  end
+
+  # get_place_photo
+  def get_place_photo(photoreference)
+    # get place photo reference
+    uri_string = 'https://maps.googleapis.com/maps/api/place/photo'
+    connection = Faraday.new(:url => uri_string) do |faraday|
+      faraday.request  :url_encoded
+      faraday.response :logger
+      faraday.adapter  Faraday.default_adapter
+    end
+
+    response = connection.get do |request|
+      request.params['key'] = @server_key
+      request.params['photoreference'] = "#{photoreference}"
+      request.params['maxwidth'] = 320
+      request.headers['Content-Type'] = 'application/json'
+    end
+
+    # get image
+    uri_string = response.headers['location']
+    return nil unless uri_string
+    connection = Faraday.new(:url => uri_string) do |faraday|
+      faraday.request  :url_encoded
+      faraday.response :logger
+      faraday.adapter  Faraday.default_adapter
+    end
+
+    response = connection.get do |request|
+      request.headers['Content-Type'] = 'application/json'
+    end
+    response.body
+  end
+
 end
+
