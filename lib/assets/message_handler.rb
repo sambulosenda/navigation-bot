@@ -209,8 +209,8 @@ class MessageHandler
       # nearby photo
       if index == coordinates.count-1
         json = google_client.get_place_nearbysearch_with_types(lat, lng, types)
-        next unless json
-        photo_reference = google_client.parse_get_place_nearbysearch(json)
+        photo_reference = nil
+        photo_reference = google_client.parse_get_place_nearbysearch(json) if json
         image_file = google_client.get_place_photo(photo_reference) if photo_reference
       end
       # street view
