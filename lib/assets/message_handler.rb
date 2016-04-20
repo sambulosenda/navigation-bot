@@ -198,7 +198,6 @@ class MessageHandler
     google_client = GoogleClient.new(@server_key)
     coordinates = [ {:lat => current_step.start_lat, :lng => current_step.start_lng}, {:lat => current_step.end_lat, :lng => current_step.end_lng} ]
     width = 320; height = 160; fov = 120; heading = Math.atan2((current_step.end_lat - current_step.start_lat), (current_step.end_lng - current_step.start_lng) * 2.0) * 180.0 / Math::PI
-    types = ['atm', 'bus_station', 'car_dealer', 'car_rental', 'car_repair', 'car_wash', 'convenience_store', 'fire_station', 'gas_station', 'park', 'pharmacy', 'police', 'school', 'university']
     coordinates.each_with_index do |coordinate, index|
       # get image binary from street view
       lat = coordinate[:lat]
@@ -208,6 +207,7 @@ class MessageHandler
 
       # nearby photo
       if index == coordinates.count-1
+        types = ['atm', 'bus_station', 'car_dealer', 'car_rental', 'car_repair', 'car_wash', 'convenience_store', 'fire_station', 'gas_station', 'park', 'pharmacy', 'police', 'school', 'university']
         json = google_client.get_place_nearbysearch_with_types(lat, lng, types)
         photo_reference = nil
         photo_reference = google_client.parse_get_place_nearbysearch(json) if json

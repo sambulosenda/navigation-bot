@@ -22,6 +22,8 @@ class WebhookController < ApplicationController
 
     message = params['entry'][0]['messaging'][0]
 
+    puts message
+
     # message
     if message.include?('message') && message['message']['text']
       facebook_id = message['sender']['id']
