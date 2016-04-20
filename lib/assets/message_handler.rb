@@ -98,6 +98,42 @@ class MessageHandler
   end
 
 
+  # handle_attachments
+  def handle_attachments(attachments)
+    json = {}
+    return json unless attachments.count
+    return json unless @sender
+
+    case @sender.navigation_status
+    when 0
+      json
+    when 1
+      attachment = attachments.first
+      return json unless attachment['type'] == 'location'
+
+      start_lat = "#{attachment['payload']['coordinates']['lat']}".to_f
+      start_lng = "#{attachment['payload']['coordinates']['long']}".to_f
+      set_directions(start_lat, start_lng)
+      set_current_step
+      current_step = get_current_step
+      return post_error unless current_step
+
+      # post bot message
+      title = 'Are you here?'
+      subtitle = nil
+      image_uri = (current_step.images && current_step.images.count > 0) ? current_step.images[0].uri : ''
+      buttons = ['Yes', 'No', 'Stop navigation']
+      json = post_elements(title, subtitle, image_uri, buttons)
+    when 2
+      json
+    when 3
+      json
+    else
+      json
+    end
+  end
+
+
   # handle_postback
   def handle_postback(message)
     case @sender.navigation_status
