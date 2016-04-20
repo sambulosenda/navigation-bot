@@ -44,7 +44,7 @@ class MessageHandler
       subtitle = result['address_components'].first['short_name']
       image_uri = (current_step.images && current_step.images.count > 0) ? current_step.images[0].uri : ''
       buttons = ['Yes', 'No', 'Stop navigation']
-      json = post_postback(title, subtitle, image_uri, buttons)
+      json = post_elements(title, subtitle, image_uri, buttons)
     when 2
       # get current step for navigation
       current_step = get_current_step
@@ -53,12 +53,13 @@ class MessageHandler
       title = 'Go toward the direction.'
       subtitle = "#{current_step.html_instructions} #{current_step.distance_text} #{current_step.duration_text}" if current_step
       image_uri = (current_step.images && current_step.images.count > 0) ? current_step.images[0].uri : ''
-      json = post_elements(title, subtitle, image_uri)
+      buttons = nil
+      json = post_elements(title, subtitle, image_uri, buttons)
       title = 'Let me know when you get there.'
-      subtitle = "#{current_step.html_instructions} #{current_step.distance_text} #{current_step.duration_text}" if current_step
+      subtitle = nil
       image_uri = (current_step.images && current_step.images.count >= 2) ? current_step.images[1].uri : ''
       buttons = ['I got there', 'Stop navigation']
-      json = post_postback(title, subtitle, image_uri, buttons)
+      json = post_elements(title, subtitle, image_uri, buttons)
     when 3
       json = post_text('Congratulations! You got the destination.')
       @sender.destroy if @sender
@@ -76,20 +77,19 @@ class MessageHandler
   end
 
   # post elements
-  def post_elements(title, subtitle, image_uri)
-    message = "{ 'attachment':{ 'type':'template', 'payload':{ 'template_type':'generic', 'elements':[ { 'title':'#{title}', 'image_url':'#{image_uri}', 'subtitle':'#{subtitle}' } ] } } }"
-    facebook_client = FacebookClient.new
-    json = facebook_client.post_message(@sender.facebook_id, message)
-  end
-
-  # post postback
-  def post_postback(title, subtitle, image_uri, buttons)
+  def post_elements(title, subtitle, image_uri, buttons)
+    # make post json
+    subtitle_text = (subtitle != nil) ? "'subtitle':'#{subtitle}'" : ''
     buttons_text = ''
     for i in 0...buttons.count
       buttons_text += "{ 'type':'postback', 'title':'#{buttons[i]}', 'payload':'#{buttons[i]}' }"
       buttons_text += ', ' unless i == buttons.count-1
     end
-    message = "{ 'attachment':{ 'type':'template', 'payload':{ 'template_type':'generic', 'elements':[ { 'title':'#{title}', 'image_url':'#{image_uri}', 'subtitle':'#{subtitle}', 'buttons':[ #{buttons_text} ] } ] } } }"
+    buttons_text = (buttons != nil) ? "'buttons':[ #{buttons_text} ]" : ''
+    subtitle_text += ',' if subtitle_text != '' && buttons_text != ''
+    message = "{ 'attachment':{ 'type':'template', 'payload':{ 'template_type':'generic', 'elements':[ { 'title':'#{title}', 'image_url':'#{image_uri}', #{subtitle_text} #{buttons_text} } ] } } }"
+
+    # request
     facebook_client = FacebookClient.new
     json = facebook_client.post_message(@sender.facebook_id, message)
   end
@@ -204,11 +204,12 @@ class MessageHandler
       image_file = nil
 
       # nearby photo
-      #json = google_client.get_place_nearbysearch_with_types(lat, lng, types)
-      #next unless json
-      #photo_reference = google_client.parse_get_place_nearbysearch(json)
-      #image_file = google_client.get_place_photo(photo_reference) if photo_reference
-
+      if index == coordinates.count-1
+        json = google_client.get_place_nearbysearch_with_types(lat, lng, types)
+        next unless json
+        photo_reference = google_client.parse_get_place_nearbysearch(json)
+        image_file = google_client.get_place_photo(photo_reference) if photo_reference
+      end
       # street view
       image_file = google_client.get_streetview(lat, lng, fov, heading, width, height) unless image_file
       next unless image_file

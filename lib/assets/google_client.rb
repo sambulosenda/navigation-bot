@@ -138,7 +138,7 @@ class GoogleClient
       request.params['key'] = @server_key
       request.params['location'] = "#{lat},#{lng}"
       request.params['types'] = "#{types_string}"
-      request.params['radius'] = 20
+      request.params['radius'] = 30
       request.headers['Content-Type'] = 'application/json'
     end
 
