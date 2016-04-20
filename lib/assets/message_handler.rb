@@ -79,15 +79,18 @@ class MessageHandler
   # post elements
   def post_elements(title, subtitle, image_uri, buttons)
     # make post json
-    subtitle_text = (subtitle != nil) ? "'subtitle':'#{subtitle}'" : ''
+    subtitle_text = ''
+    subtitle_text = "'subtitle':'#{subtitle}'" if subtitle
     buttons_text = ''
-    for i in 0...buttons.count
-      buttons_text += "{ 'type':'postback', 'title':'#{buttons[i]}', 'payload':'#{buttons[i]}' }"
-      buttons_text += ', ' unless i == buttons.count-1
+    if buttons
+      for i in 0...buttons.count
+        buttons_text += "{ 'type':'postback', 'title':'#{buttons[i]}', 'payload':'#{buttons[i]}' }"
+        buttons_text += ', ' unless i == buttons.count-1
+      end
+      buttons_text = "'buttons':[ #{buttons_text} ]"
     end
-    buttons_text = (buttons != nil) ? "'buttons':[ #{buttons_text} ]" : ''
-    subtitle_text += ',' if subtitle_text != '' && buttons_text != ''
-    message = "{ 'attachment':{ 'type':'template', 'payload':{ 'template_type':'generic', 'elements':[ { 'title':'#{title}', 'image_url':'#{image_uri}', #{subtitle_text} #{buttons_text} } ] } } }"
+    subtitle_text += ', ' if subtitle_text != '' && buttons_text != ''
+    message = "{ 'attachment':{ 'type':'template', 'payload':{ 'template_type':'generic', 'elements':[ { 'title':'#{title}', 'image_url':'#{image_uri}', #{subtitle_text}#{buttons_text} } ] } } }"
 
     # request
     facebook_client = FacebookClient.new
