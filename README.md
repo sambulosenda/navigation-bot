@@ -1,9 +1,19 @@
-# Digital Garagish
+# navigation-bot
+
 
 Facebook messenger bot navigating you without map routing.
 
+![screenshot](../master/screenshot/00.jpg?raw=true)
 
-## Developer Registerations
+![screenshot](../master/screenshot/01.jpg?raw=true)
+
+![screenshot](../master/screenshot/02.jpg?raw=true)
+
+
+## Installation
+
+
+### Developer Registerations
 
 ### [Messenger Platform ᴮᴱᵀᴬ](https://developers.facebook.com/docs/messenger-platform)
 
@@ -12,7 +22,7 @@ Facebook messenger bot navigating you without map routing.
 Google Street View Image API, Google Maps Directions API
 
 
-## Set Environmental Variables
+### Set Environmental Variables
 
 ```
 # on local
