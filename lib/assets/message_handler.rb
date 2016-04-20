@@ -1,3 +1,4 @@
+#require 'math'
 require './lib/assets/google_client'
 require './lib/assets/facebook_client'
 
@@ -24,7 +25,7 @@ class MessageHandler
 
     case @sender.navigation_status
     when 0
-      json = post_text('Where is your current location?')
+      json = post_text('I will navigate you to Digital Garage. Where is your current location?')
       update_navigation_status
       json
     when 1
@@ -43,17 +44,21 @@ class MessageHandler
       subtitle = result['address_components'].first['short_name']
       image_uri = (current_step.images && current_step.images.count > 0) ? current_step.images[0].uri : ''
       buttons = ['Yes', 'No', 'Stop navigation']
-      json = post_payload(title, subtitle, image_uri, buttons)
+      json = post_postback(title, subtitle, image_uri, buttons)
     when 2
       # get current step for navigation
       current_step = get_current_step
       return post_error unless current_step
       # post bot message
+      title = 'Go toward the direction.'
+      subtitle = "#{current_step.html_instructions} #{current_step.distance_text} #{current_step.duration_text}" if current_step
+      image_uri = (current_step.images && current_step.images.count > 0) ? current_step.images[0].uri : ''
+      json = post_elements(title, subtitle, image_uri)
       title = 'Let me know when you get there.'
       subtitle = "#{current_step.html_instructions} #{current_step.distance_text} #{current_step.duration_text}" if current_step
       image_uri = (current_step.images && current_step.images.count >= 2) ? current_step.images[1].uri : ''
       buttons = ['I got there', 'Stop navigation']
-      json post_payload(title, subtitle, image_uri, buttons)
+      json = post_postback(title, subtitle, image_uri, buttons)
     when 3
       json = post_text('Congratulations! You got the destination.')
       @sender.destroy if @sender
@@ -70,8 +75,15 @@ class MessageHandler
     json = facebook_client.post_message(@sender.facebook_id, text)
   end
 
-  # post payload
-  def post_payload(title, subtitle, image_uri, buttons)
+  # post elements
+  def post_elements(title, subtitle, image_uri)
+    message = "{ 'attachment':{ 'type':'template', 'payload':{ 'template_type':'generic', 'elements':[ { 'title':'#{title}', 'image_url':'#{image_uri}', 'subtitle':'#{subtitle}' } ] } } }"
+    facebook_client = FacebookClient.new
+    json = facebook_client.post_message(@sender.facebook_id, message)
+  end
+
+  # post postback
+  def post_postback(title, subtitle, image_uri, buttons)
     buttons_text = ''
     for i in 0...buttons.count
       buttons_text += "{ 'type':'postback', 'title':'#{buttons[i]}', 'payload':'#{buttons[i]}' }"
@@ -179,15 +191,26 @@ class MessageHandler
     return unless current_step
     return if current_step.images.count >= 2
 
-    # upload streetview images of start & end coordinates
+    # nearby photo or upload streetview images of start & end coordinates
     google_client = GoogleClient.new(@server_key)
     coordinates = [ {:lat => current_step.start_lat, :lng => current_step.start_lng}, {:lat => current_step.end_lat, :lng => current_step.end_lng} ]
-    width = 320; height = 160; degree = 120
-    coordinates.each do |coordinate|
+    width = 320; height = 160; fov = 120; heading = Math.atan2((current_step.end_lat - current_step.start_lat), (current_step.end_lng - current_step.start_lng) * 2.0) * 180.0 / Math::PI
+    types = ['atm', 'bus_station', 'car_dealer', 'car_rental', 'car_repair', 'car_wash', 'convenience_store', 'fire_station', 'gas_station', 'park', 'pharmacy', 'police', 'school', 'university']
+    coordinates.each_with_index do |coordinate, index|
       # get image binary from street view
       lat = coordinate[:lat]
       lng = coordinate[:lng]
-      image_file = google_client.get_streetview(lat, lng, degree, width, height)
+
+      image_file = nil
+
+      # nearby photo
+      #json = google_client.get_place_nearbysearch_with_types(lat, lng, types)
+      #next unless json
+      #photo_reference = google_client.parse_get_place_nearbysearch(json)
+      #image_file = google_client.get_place_photo(photo_reference) if photo_reference
+
+      # street view
+      image_file = google_client.get_streetview(lat, lng, fov, heading, width, height) unless image_file
       next unless image_file
 
       name = "#{lat}_#{lng}"

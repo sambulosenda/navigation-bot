@@ -10,7 +10,7 @@ class GoogleClient
   end
 
   # get_streetview
-  def get_streetview(lat, lng, degree, width, height)
+  def get_streetview(lat, lng, fov, heading, width, height)
     uri_string = 'https://maps.googleapis.com/maps/api/streetview'
     connection = Faraday.new(:url => uri_string) do |faraday|
       faraday.request  :url_encoded
@@ -22,8 +22,8 @@ class GoogleClient
       request.params['key'] = @server_key
       request.params['size'] = "#{width}x#{height}"
       request.params['location'] = "#{lat},#{lng}"
-      request.params['fov'] = "#{degree}"
-      request.params['heading'] = '0'
+      request.params['fov'] = "#{fov}"
+      request.params['heading'] = "#{heading}"
       request.params['pitch'] = '0'
       request.headers['Content-Type'] = 'application/json'
     end
@@ -98,8 +98,8 @@ class GoogleClient
     return results.first
   end
 
-  # get_place_nearbysearch
-  def get_place_nearbysearch(lat, lng, type)
+  # get_place_nearbysearch_with_type
+  def get_place_nearbysearch_with_type(lat, lng, type)
     uri_string = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json'
     connection = Faraday.new(:url => uri_string) do |faraday|
       faraday.request  :url_encoded
@@ -111,12 +111,40 @@ class GoogleClient
       request.params['key'] = @server_key
       request.params['location'] = "#{lat},#{lng}"
       request.params['type'] = "#{type}"
-      request.params['radius'] = 200
+      request.params['radius'] = 30
       request.headers['Content-Type'] = 'application/json'
     end
 
    JSON.parse(response.body)
   end
+
+  # get_place_nearbysearch_with_types
+  def get_place_nearbysearch_with_types(lat, lng, types)
+    types_string = ''
+    types.each_with_index do |type, index|
+      types_string += type
+      types_string += '|' unless index == types.count-1
+    end
+    return nil if types_string == ''
+
+    uri_string = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json'
+    connection = Faraday.new(:url => uri_string) do |faraday|
+      faraday.request  :url_encoded
+      faraday.response :logger
+      faraday.adapter  Faraday.default_adapter
+    end
+
+    response = connection.get do |request|
+      request.params['key'] = @server_key
+      request.params['location'] = "#{lat},#{lng}"
+      request.params['types'] = "#{types_string}"
+      request.params['radius'] = 20
+      request.headers['Content-Type'] = 'application/json'
+    end
+
+   JSON.parse(response.body)
+  end
+
 
   # parse_get_place_nearbysearch
   def parse_get_place_nearbysearch(json)
@@ -144,6 +172,7 @@ class GoogleClient
       request.params['key'] = @server_key
       request.params['photoreference'] = "#{photoreference}"
       request.params['maxwidth'] = 320
+      request.params['maxheight'] = 160
       request.headers['Content-Type'] = 'application/json'
     end
 
