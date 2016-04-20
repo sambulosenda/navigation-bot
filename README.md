@@ -9,6 +9,10 @@ Facebook messenger bot navigating you without map routing.
 
 ![screenshot](../master/screenshot/02.jpg?raw=true)
 
+![screenshot](../master/screenshot/03.jpg?raw=true)
+
+![screenshot](../master/screenshot/04.jpg?raw=true)
+
 
 ## Installation
 
